@@ -387,6 +387,191 @@ canvas { width: 100% !important; height: 100% !important; }
   margin-bottom: 8px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Comparison Tool */
+.compare-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.compare-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.compare-search:focus { border-color: var(--accent); }
+.compare-search::placeholder { color: var(--text-muted); }
+.cat-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cat-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.cat-btn:hover { border-color: var(--accent); color: var(--text); }
+.cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pub-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.pub-select-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.pub-select-item:hover { border-color: var(--accent); }
+.pub-select-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+.pub-select-item.hidden { display: none; }
+.pub-check {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+.pub-select-item.selected .pub-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.pub-select-info {
+  flex: 1;
+  min-width: 0;
+}
+.pub-select-name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pub-select-cat {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.compare-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.compare-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.compare-btn-primary { background: var(--accent); color: #fff; }
+.compare-btn-primary:hover { background: #2563eb; }
+.compare-btn-secondary { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+.compare-btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+.compare-result {
+  display: none;
+}
+.compare-result.visible { display: block; }
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 16px;
+}
+.compare-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.compare-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(30,42,58,0.5);
+}
+.compare-table tr:hover td { background: rgba(59,130,246,0.04); }
+.metric-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.metric-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.metric-bar-val {
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 50px;
+  text-align: right;
+}
+.compare-chart-container {
+  height: 300px;
+  margin-top: 16px;
+}
+.compare-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.selected-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
 .refresh-btn {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -492,6 +677,43 @@ canvas { width: 100% !important; height: 100% !important; }
     <div class="chart-container">
       <canvas id="revenueChart"></canvas>
     </div>
+  </div>
+
+  <!-- Publisher Comparison Tool -->
+  <div class="panel full-width" id="comparePanel">
+    <div class="panel-title">Publisher Comparison Tool</div>
+    <div class="compare-controls">
+      <input type="text" class="compare-search" id="compareSearch" placeholder="🔍 Search publishers…">
+      <div class="cat-filters" id="catFilters"></div>
+      <span class="selected-count" id="selectedCount">0 selected</span>
+    </div>
+    <div class="pub-select-grid" id="pubSelectGrid"></div>
+    <div class="compare-actions">
+      <button class="compare-btn compare-btn-primary" onclick="runComparison()">Compare Selected</button>
+      <button class="compare-btn compare-btn-secondary" onclick="selectAllVisible()">Select All Visible</button>
+      <button class="compare-btn compare-btn-secondary" onclick="clearSelection()">Clear</button>
+    </div>
+    <div class="compare-result" id="compareResult">
+      <div class="compare-chart-container">
+        <canvas id="compareChart"></canvas>
+      </div>
+      <div class="table-wrap" style="margin-top:20px;max-height:400px;overflow-y:auto;">
+        <table class="compare-table" id="compareTable">
+          <thead>
+            <tr>
+              <th>Publisher</th>
+              <th>Category</th>
+              <th>Traffic Δ</th>
+              <th>Resilience Score</th>
+              <th>AI Exposure</th>
+              <th>Revenue Risk</th>
+            </tr>
+          </thead>
+          <tbody id="compareTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="compare-empty" id="compareEmpty">Select 2+ publishers above, then click <strong>Compare Selected</strong></div>
   </div>
 
   <!-- Live Intelligence Feed -->
@@ -781,6 +1003,158 @@ updateKPIs();
 // Auto-refresh every 10 minutes
 setInterval(fetchAllFeeds, 600000);
 setInterval(updateKPIs, 3600000);
+
+// ── Publisher Comparison Tool ──
+const compPublishers = [
+  { name:'New York Times', icon:'🗽', cat:'Newspaper', change:-24.1, resilience:72, aiExposure:68, revRisk:820 },
+  { name:'Washington Post', icon:'🏛', cat:'Newspaper', change:-29.8, resilience:65, aiExposure:74, revRisk:640 },
+  { name:'CNN', icon:'📺', cat:'Broadcast', change:-33.2, resilience:58, aiExposure:79, revRisk:910 },
+  { name:'USA Today', icon:'🗞', cat:'Newspaper', change:-41.7, resilience:48, aiExposure:85, revRisk:380 },
+  { name:'BuzzFeed News', icon:'⚡', cat:'Digital', change:-52.3, resilience:35, aiExposure:91, revRisk:120 },
+  { name:'Reuters', icon:'🌐', cat:'Wire', change:-18.4, resilience:81, aiExposure:52, revRisk:290 },
+  { name:'Local TV/News', icon:'📡', cat:'Local', change:-39.1, resilience:44, aiExposure:83, revRisk:1200 },
+  { name:'Condé Nast', icon:'✨', cat:'Magazine', change:-26.5, resilience:68, aiExposure:63, revRisk:510 },
+  { name:'Vox Media', icon:'🔷', cat:'Digital', change:-35.9, resilience:52, aiExposure:77, revRisk:340 },
+  { name:'Hearst Magazines', icon:'📰', cat:'Magazine', change:-22.8, resilience:74, aiExposure:58, revRisk:480 },
+  { name:'BBC News', icon:'🇬🇧', cat:'Broadcast', change:-19.2, resilience:79, aiExposure:55, revRisk:310 },
+  { name:'The Guardian', icon:'📗', cat:'Newspaper', change:-27.3, resilience:67, aiExposure:69, revRisk:420 },
+  { name:'Forbes', icon:'💼', cat:'Magazine', change:-31.5, resilience:60, aiExposure:72, revRisk:560 },
+  { name:'The Atlantic', icon:'🌊', cat:'Magazine', change:-20.1, resilience:76, aiExposure:48, revRisk:180 },
+  { name:'Business Insider', icon:'📊', cat:'Digital', change:-38.4, resilience:50, aiExposure:80, revRisk:290 },
+  { name:'NPR', icon:'🎙', cat:'Broadcast', change:-16.7, resilience:82, aiExposure:44, revRisk:150 },
+  { name:'AP News', icon:'📌', cat:'Wire', change:-15.3, resilience:84, aiExposure:41, revRisk:210 },
+  { name:'CNET', icon:'💻', cat:'Digital', change:-45.6, resilience:42, aiExposure:88, revRisk:220 },
+  { name:'People Magazine', icon:'🌟', cat:'Magazine', change:-28.9, resilience:64, aiExposure:66, revRisk:350 },
+  { name:'The Daily Beast', icon:'🐾', cat:'Digital', change:-43.2, resilience:45, aiExposure:82, revRisk:130 }
+];
+
+const compCategories = [...new Set(compPublishers.map(p=>p.cat))];
+let selectedPubs = new Set();
+let activeCat = 'all';
+let compareChartInstance = null;
+
+// Build category filters
+const catFiltersEl = document.getElementById('catFilters');
+catFiltersEl.innerHTML = `<button class="cat-btn active" data-cat="all">All</button>` +
+  compCategories.map(c=>`<button class="cat-btn" data-cat="${c}">${c}</button>`).join('');
+catFiltersEl.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.onclick = () => {
+    catFiltersEl.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    filterPubs();
+  };
+});
+
+// Build publisher selection grid
+const pubGrid = document.getElementById('pubSelectGrid');
+compPublishers.forEach((p,i) => {
+  const el = document.createElement('div');
+  el.className = 'pub-select-item';
+  el.dataset.idx = i;
+  el.dataset.cat = p.cat;
+  el.innerHTML = `<div class="pub-check">✓</div>
+    <div class="pub-select-info">
+      <div class="pub-select-name">${p.icon} ${p.name}</div>
+      <div class="pub-select-cat">${p.cat} · ${p.change}%</div>
+    </div>`;
+  el.onclick = () => togglePub(i, el);
+  pubGrid.appendChild(el);
+});
+
+function togglePub(idx, el) {
+  if (selectedPubs.has(idx)) { selectedPubs.delete(idx); el.classList.remove('selected'); }
+  else { selectedPubs.add(idx); el.classList.add('selected'); }
+  document.getElementById('selectedCount').textContent = selectedPubs.size + ' selected';
+}
+
+function filterPubs() {
+  const search = document.getElementById('compareSearch').value.toLowerCase();
+  pubGrid.querySelectorAll('.pub-select-item').forEach(el => {
+    const p = compPublishers[el.dataset.idx];
+    const matchCat = activeCat === 'all' || p.cat === activeCat;
+    const matchSearch = !search || p.name.toLowerCase().includes(search) || p.cat.toLowerCase().includes(search);
+    el.classList.toggle('hidden', !(matchCat && matchSearch));
+  });
+}
+document.getElementById('compareSearch').addEventListener('input', filterPubs);
+
+function selectAllVisible() {
+  pubGrid.querySelectorAll('.pub-select-item:not(.hidden)').forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    selectedPubs.add(idx);
+    el.classList.add('selected');
+  });
+  document.getElementById('selectedCount').textContent = selectedPubs.size + ' selected';
+}
+
+function clearSelection() {
+  selectedPubs.clear();
+  pubGrid.querySelectorAll('.pub-select-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('selectedCount').textContent = '0 selected';
+  document.getElementById('compareResult').classList.remove('visible');
+  document.getElementById('compareEmpty').style.display = 'block';
+}
+
+const compColors = ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#a855f7',
+  '#e11d48','#0ea5e9','#84cc16','#f43f5e','#6366f1','#22d3ee','#fb923c','#a3e635','#c084fc','#38bdf8'];
+
+function runComparison() {
+  if (selectedPubs.size < 2) { alert('Select at least 2 publishers to compare.'); return; }
+  const sel = [...selectedPubs].map(i=>compPublishers[i]);
+  document.getElementById('compareEmpty').style.display = 'none';
+  document.getElementById('compareResult').classList.add('visible');
+
+  // Build comparison table
+  const tbody = document.getElementById('compareTableBody');
+  tbody.innerHTML = sel.map((p,i) => {
+    const resColor = p.resilience > 70 ? colors.green : p.resilience > 50 ? colors.orange : colors.red;
+    const expColor = p.aiExposure > 75 ? colors.red : p.aiExposure > 55 ? colors.orange : colors.green;
+    return `<tr>
+      <td><strong>${p.icon} ${p.name}</strong></td>
+      <td style="color:var(--text-muted);font-size:13px">${p.cat}</td>
+      <td class="change-neg" style="font-weight:700">${p.change}%</td>
+      <td><div class="metric-bar"><div class="metric-bar-track"><div class="metric-bar-fill" style="width:${p.resilience}%;background:${resColor}"></div></div><span class="metric-bar-val" style="color:${resColor}">${p.resilience}</span></div></td>
+      <td><div class="metric-bar"><div class="metric-bar-track"><div class="metric-bar-fill" style="width:${p.aiExposure}%;background:${expColor}"></div></div><span class="metric-bar-val" style="color:${expColor}">${p.aiExposure}%</span></div></td>
+      <td style="font-weight:700;color:var(--red)">$${p.revRisk}M</td>
+    </tr>`;
+  }).join('');
+
+  // Build comparison chart
+  if (compareChartInstance) compareChartInstance.destroy();
+  compareChartInstance = new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+      labels: sel.map(p=>p.name),
+      datasets: [
+        { label:'Traffic Change (%)', data: sel.map(p=>p.change), backgroundColor: sel.map((_,i)=>compColors[i % compColors.length] + '99'), borderColor: sel.map((_,i)=>compColors[i % compColors.length]), borderWidth: 2, borderRadius: 6, yAxisID: 'y' },
+        { label:'Resilience Score', data: sel.map(p=>p.resilience), type:'line', borderColor: colors.green, backgroundColor: 'transparent', tension: 0.3, pointRadius: 6, pointBackgroundColor: colors.green, borderWidth: 2, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect: false },
+      plugins: {
+        legend: { position:'bottom', labels: { color: colors.text, padding: 16, usePointStyle: true } },
+        tooltip: {
+          callbacks: {
+            afterBody: function(items) {
+              const idx = items[0].dataIndex;
+              const p = sel[idx];
+              return `AI Exposure: ${p.aiExposure}%\nRev. at Risk: $${p.revRisk}M`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: colors.text, maxRotation: 45 }, grid: { color: colors.grid } },
+        y: { position:'left', ticks: { color: colors.red, callback: v=>v+'%' }, grid: { color: colors.grid }, title: { display: true, text:'Traffic Change', color: colors.text } },
+        y1: { position:'right', ticks: { color: colors.green }, grid: { drawOnChartArea: false }, min: 0, max: 100, title: { display: true, text:'Resilience', color: colors.text } }
+      }
+    }
+  });
+}
 </script>
 </body>
 </html>
