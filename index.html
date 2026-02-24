@@ -592,6 +592,7 @@ canvas { width: 100% !important; height: 100% !important; }
 <header class="header">
   <h1>📉 AI Traffic <span>Impact</span></h1>
   <div class="header-meta">
+    <button id="exportPdfBtn" onclick="exportPDF()" style="background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .2s;">📄 Export PDF</button>
     <span><span class="live-dot"></span> Live Feed</span>
     <span id="lastUpdated">Updating…</span>
   </div>
@@ -1154,6 +1155,50 @@ function runComparison() {
       }
     }
   });
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script>
+async function exportPDF() {
+  const btn = document.getElementById('exportPdfBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Generating…';
+  btn.style.opacity = '0.6';
+  btn.disabled = true;
+  try {
+    await new Promise(r => setTimeout(r, 300));
+    const canvas = await html2canvas(document.body, {
+      scale: 1.5,
+      backgroundColor: '#0a0e17',
+      useCORS: true,
+      logging: false,
+      windowWidth: 1200
+    });
+    const { jsPDF } = window.jspdf;
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const pdfW = 297; // A4 landscape width mm
+    const pdfH = 210;
+    const ratio = pdfW / imgW;
+    const scaledH = imgH * ratio;
+    const pageCount = Math.ceil(scaledH / pdfH);
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    for (let i = 0; i < pageCount; i++) {
+      if (i > 0) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, -(i * pdfH), pdfW, scaledH);
+    }
+    const d = new Date();
+    const ts = d.toISOString().slice(0,10);
+    pdf.save(`AI-Traffic-Impact-Briefing-${ts}.pdf`);
+  } catch(e) {
+    console.error('PDF export failed:', e);
+    alert('PDF export failed. Please try again.');
+  } finally {
+    btn.innerHTML = orig;
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
