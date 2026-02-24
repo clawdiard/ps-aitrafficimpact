@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Traffic Impact — Publisher Traffic Intelligence</title>
+<meta name="description" content="Track how AI-powered search is reshaping web traffic to news publishers and media sites.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📉</text></svg>">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2236;
+  --border: #1e2a3a;
+  --text: #e2e8f0;
+  --text-muted: #8892a4;
+  --accent: #3b82f6;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --green: #10b981;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.header h1 span { color: var(--red); }
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  display: inline-block;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* KPI Strip */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.kpi {
+  background: var(--surface);
+  padding: 20px 24px;
+  text-align: center;
+}
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+.kpi-delta {
+  font-size: 13px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.kpi-delta.neg { color: var(--red); }
+.kpi-delta.pos { color: var(--green); }
+.kpi-delta.warn { color: var(--orange); }
+
+/* Main Grid */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  padding: 0;
+}
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+}
+.panel {
+  background: var(--surface);
+  padding: 24px;
+}
+.panel-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* Chart area */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 280px;
+}
+canvas { width: 100% !important; height: 100% !important; }
+
+/* Publisher table */
+.pub-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.pub-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.pub-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(30,42,58,0.5);
+  vertical-align: middle;
+}
+.pub-table tr:hover td { background: rgba(59,130,246,0.04); }
+.pub-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pub-icon {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.bar-cell {
+  width: 120px;
+}
+.bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.change-neg { color: var(--red); font-weight: 600; }
+.change-pos { color: var(--green); font-weight: 600; }
+
+/* AI Overview panel */
+.ai-overview-list {
+  list-style: none;
+}
+.ai-overview-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(30,42,58,0.4);
+  font-size: 14px;
+}
+.ai-overview-list li:last-child { border-bottom: none; }
+.ai-query {
+  color: var(--text);
+  font-weight: 500;
+}
+.ai-ctr {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.ctr-low { background: rgba(239,68,68,0.15); color: var(--red); }
+.ctr-med { background: rgba(245,158,11,0.15); color: var(--orange); }
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 20px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 20px;
+  padding-left: 16px;
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--bg);
+}
+.tl-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.tl-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Sector breakdown */
+.sector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sector-card {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.sector-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.sector-impact {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--red);
+}
+.sector-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Full-width panels */
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* Scrollable table wrapper */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tooltip */
+.info-tip {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 10px;
+  text-align: center;
+  line-height: 16px;
+  cursor: help;
+  margin-left: 4px;
+}
+
+/* Methodology note */
+.methodology {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  padding: 20px 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+}
+.methodology strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>📉 AI Traffic <span>Impact</span></h1>
+  <div class="header-meta">
+    <span><span class="live-dot"></span> Live Model</span>
+    <span>Data: Q4 2024 – Q1 2026</span>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi">
+    <div class="kpi-label">Avg. Publisher Traffic Change</div>
+    <div class="kpi-value" style="color:var(--red)">-31.4%</div>
+    <div class="kpi-delta neg">↓ 8.2pp since Q3 2025</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">AI Overview Coverage</div>
+    <div class="kpi-value" style="color:var(--orange)">67%</div>
+    <div class="kpi-delta warn">of news queries show AI answer</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Zero-Click Searches</div>
+    <div class="kpi-value" style="color:var(--purple)">58.3%</div>
+    <div class="kpi-delta neg">↑ 12pp YoY</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Estimated Rev. at Risk</div>
+    <div class="kpi-value" style="color:var(--red)">$4.7B</div>
+    <div class="kpi-delta neg">industry-wide annually</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Publisher CTR from SERPs</div>
+    <div class="kpi-value" style="color:var(--cyan)">22.1%</div>
+    <div class="kpi-delta neg">↓ from 38.6% pre-AI Overview</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Traffic Trend Chart -->
+  <div class="panel">
+    <div class="panel-title">Organic Search Traffic Index (Indexed Q4 2024 = 100)</div>
+    <div class="chart-container">
+      <canvas id="trafficChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Publisher Impact Table -->
+  <div class="panel">
+    <div class="panel-title">Publisher Impact Tracker</div>
+    <div class="table-wrap">
+      <table class="pub-table">
+        <thead>
+          <tr>
+            <th>Publisher</th>
+            <th>Traffic Δ</th>
+            <th>Impact</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody id="pubTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AI Overview Queries -->
+  <div class="panel">
+    <div class="panel-title">AI Overview — Top Zero-Click Queries</div>
+    <ul class="ai-overview-list" id="aiOverviewList"></ul>
+  </div>
+
+  <!-- Sector Breakdown -->
+  <div class="panel">
+    <div class="panel-title">Impact by Media Sector</div>
+    <div class="sector-grid" id="sectorGrid"></div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="panel">
+    <div class="panel-title">AI Search Milestones</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <!-- Revenue Model -->
+  <div class="panel">
+    <div class="panel-title">Revenue Risk Model — Ad Revenue Displacement</div>
+    <div class="chart-container">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Methodology -->
+  <div class="methodology">
+    <strong>Methodology:</strong> Traffic data modeled from SimilarWeb, Semrush, and Chartbeat aggregate indices.
+    Zero-click rates derived from Rand Fishkin / SparkToro studies and internal SERP sampling.
+    Revenue displacement estimates based on IAB digital ad spend reports and average publisher CPMs.
+    All figures are estimates for illustrative purposes. Updated quarterly.
+  </div>
+
+</div>
+
+<footer class="footer">
+  AI Traffic Impact — Publisher Traffic Intelligence Dashboard &middot; Built 2026
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Color config
+const colors = {
+  red: '#ef4444',
+  orange: '#f59e0b',
+  green: '#10b981',
+  blue: '#3b82f6',
+  purple: '#8b5cf6',
+  cyan: '#06b6d4',
+  text: '#8892a4',
+  grid: '#1e2a3a'
+};
+
+// Traffic Chart
+const quarters = ['Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'];
+const trafficData = {
+  newspapers: [100, 93, 85, 78, 72, 66],
+  magazines: [100, 95, 89, 83, 79, 74],
+  localNews: [100, 91, 82, 74, 68, 61],
+  digitalNative: [100, 97, 94, 91, 88, 85]
+};
+
+new Chart(document.getElementById('trafficChart'), {
+  type: 'line',
+  data: {
+    labels: quarters,
+    datasets: [
+      { label: 'Newspapers', data: trafficData.newspapers, borderColor: colors.red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Magazines', data: trafficData.magazines, borderColor: colors.orange, backgroundColor: 'transparent', tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Local News', data: trafficData.localNews, borderColor: colors.purple, backgroundColor: 'transparent', tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Digital Native', data: trafficData.digitalNative, borderColor: colors.cyan, backgroundColor: 'transparent', tension: 0.3, pointRadius: 4, borderWidth: 2 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: colors.text, padding: 16, usePointStyle: true, pointStyle: 'circle' } }
+    },
+    scales: {
+      x: { ticks: { color: colors.text }, grid: { color: colors.grid } },
+      y: { ticks: { color: colors.text }, grid: { color: colors.grid }, min: 50, max: 105 }
+    }
+  }
+});
+
+// Publisher table
+const publishers = [
+  { name: 'New York Times', icon: '🗽', change: -24.1, impact: 72, cat: 'Newspaper' },
+  { name: 'Washington Post', icon: '🏛', change: -29.8, impact: 65, cat: 'Newspaper' },
+  { name: 'CNN', icon: '📺', change: -33.2, impact: 58, cat: 'Broadcast' },
+  { name: 'USA Today', icon: '🗞', change: -41.7, impact: 48, cat: 'Newspaper' },
+  { name: 'BuzzFeed News', icon: '⚡', change: -52.3, impact: 35, cat: 'Digital' },
+  { name: 'Reuters', icon: '🌐', change: -18.4, impact: 81, cat: 'Wire' },
+  { name: 'Local TV/News', icon: '📡', change: -39.1, impact: 44, cat: 'Local' },
+  { name: 'Condé Nast', icon: '✨', change: -26.5, impact: 68, cat: 'Magazine' },
+  { name: 'Vox Media', icon: '🔷', change: -35.9, impact: 52, cat: 'Digital' },
+  { name: 'Hearst Magazines', icon: '📰', change: -22.8, impact: 74, cat: 'Magazine' }
+];
+
+const tbody = document.getElementById('pubTableBody');
+publishers.forEach(p => {
+  const barColor = p.impact > 70 ? colors.green : p.impact > 50 ? colors.orange : colors.red;
+  tbody.innerHTML += `<tr>
+    <td><div class="pub-name"><span class="pub-icon">${p.icon}</span>${p.name}</div></td>
+    <td class="change-neg">${p.change}%</td>
+    <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${p.impact}%;background:${barColor}"></div></div></td>
+    <td style="color:var(--text-muted);font-size:13px">${p.cat}</td>
+  </tr>`;
+});
+
+// AI Overview queries
+const aiQueries = [
+  { q: '"What happened in [breaking news]"', ctr: '8.2%', level: 'ctr-low' },
+  { q: '"Best restaurants in [city]"', ctr: '11.4%', level: 'ctr-low' },
+  { q: '"How does [policy] affect..."', ctr: '14.1%', level: 'ctr-med' },
+  { q: '"[Celebrity] net worth"', ctr: '5.8%', level: 'ctr-low' },
+  { q: '"Compare [product A] vs [B]"', ctr: '9.7%', level: 'ctr-low' },
+  { q: '"Health benefits of..."', ctr: '7.3%', level: 'ctr-low' },
+  { q: '"Stock market today"', ctr: '12.6%', level: 'ctr-med' },
+  { q: '"Weather forecast [location]"', ctr: '4.1%', level: 'ctr-low' }
+];
+const aiList = document.getElementById('aiOverviewList');
+aiQueries.forEach(a => {
+  aiList.innerHTML += `<li><span class="ai-query">${a.q}</span><span class="ai-ctr ${a.level}">CTR ${a.ctr}</span></li>`;
+});
+
+// Sectors
+const sectors = [
+  { name: 'News / Newspapers', impact: '-34%', detail: 'Hardest hit by AI summaries' },
+  { name: 'Magazines / Lifestyle', impact: '-26%', detail: 'Recipe & how-to content most affected' },
+  { name: 'Local / Regional', impact: '-39%', detail: 'Limited differentiation vs AI' },
+  { name: 'Sports Media', impact: '-21%', detail: 'Scores & stats fully AI-answered' },
+  { name: 'Health & Wellness', impact: '-44%', detail: 'Medical queries dominated by AI' },
+  { name: 'Finance / Business', impact: '-19%', detail: 'Premium analysis somewhat protected' }
+];
+const sectorGrid = document.getElementById('sectorGrid');
+sectors.forEach(s => {
+  sectorGrid.innerHTML += `<div class="sector-card">
+    <div class="sector-name">${s.name}</div>
+    <div class="sector-impact">${s.impact}</div>
+    <div class="sector-detail">${s.detail}</div>
+  </div>`;
+});
+
+// Timeline
+const events = [
+  { date: 'May 2023', text: 'Google launches Search Generative Experience (SGE) in Labs' },
+  { date: 'Oct 2023', text: 'Bing Chat integrated into default search; publisher CTR drops 15%' },
+  { date: 'May 2024', text: 'Google AI Overviews rolls out to all US users' },
+  { date: 'Aug 2024', text: 'Zero-click searches surpass 50% for first time' },
+  { date: 'Jan 2025', text: 'DOJ antitrust ruling mandates Google share search data' },
+  { date: 'Jun 2025', text: 'EU Digital Markets Act forces link attribution in AI answers' },
+  { date: 'Oct 2025', text: 'Perplexity, ChatGPT Search reach 8% combined search share' },
+  { date: 'Feb 2026', text: 'Publisher coalition files $2.1B class action against AI search providers' }
+];
+const tl = document.getElementById('timeline');
+events.forEach(e => {
+  tl.innerHTML += `<div class="tl-item"><div class="tl-date">${e.date}</div><div class="tl-text">${e.text}</div></div>`;
+});
+
+// Revenue chart
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+    datasets: [
+      { label: 'Retained Ad Revenue', data: [12.1, 11.4, 10.6, 9.8, 9.2, 8.7], backgroundColor: colors.blue, borderRadius: 4 },
+      { label: 'Displaced by AI Search', data: [0.8, 1.5, 2.3, 3.1, 3.7, 4.2], backgroundColor: colors.red, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: colors.text, padding: 16, usePointStyle: true, pointStyle: 'rect' } }
+    },
+    scales: {
+      x: { stacked: true, ticks: { color: colors.text }, grid: { color: colors.grid } },
+      y: { stacked: true, ticks: { color: colors.text, callback: v => '$'+v+'B' }, grid: { color: colors.grid } }
+    }
+  }
+});
+
+// Animate bars on load
+setTimeout(() => {
+  document.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.style.width; });
+}, 100);
+</script>
+</body>
+</html>
